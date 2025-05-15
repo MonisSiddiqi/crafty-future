@@ -153,7 +153,7 @@ export function EmailCaptureForm({ simplified }: EmailCaptureFormProps) {
   // Full form
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 pb-10">
         <FormField
           control={form.control}
           name="name"
