@@ -22,14 +22,14 @@ export function AboutSection() {
         <div className="w-fit space-y-4 rounded-lg bg-white p-6">
           <div className="flex items-center gap-3 text-gray-700">
             <MailIcon className="size-5" />
-            <span>info@mosaic.com</span>
-            <Copy textToCopy="info@mosaic.com" label="email" />
+            <span>admin@craftyfuture.com</span>
+            <Copy textToCopy="admin@craftyfuture.com" label="email" />
           </div>
-          <div className="flex items-center gap-3">
+          {/* <div className="flex items-center gap-3">
             <PhoneIcon className="size-5" />
             <span>+1256321452</span>
             <Copy textToCopy="+1256321452" label="phone number" />
-          </div>
+          </div> */}
         </div>
       </div>
 
