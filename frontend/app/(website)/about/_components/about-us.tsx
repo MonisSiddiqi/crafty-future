@@ -1,7 +1,7 @@
 import AboutImage from "@/app/assets/about-page.png";
 import { Copy } from "../../_components/copy";
 import Image from "next/image";
-import { MailIcon, PhoneIcon } from "lucide-react";
+import { MailIcon } from "lucide-react";
 
 export function AboutSection() {
   return (
