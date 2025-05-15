@@ -1,0 +1,414 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String           @id @default(uuid()) @db.VarChar(36)
+  email           String           @unique
+  password        String
+  isEmailVerified Boolean          @default(false)
+  isActive        Boolean          @default(true)
+  role            UserRole         @default(USER)
+  updatedAt       DateTime         @updatedAt @db.Timestamptz
+  createdAt       DateTime         @default(now()) @db.Timestamptz
+  UserProfile     UserProfile?
+  projects        Project[]
+  reviews         Review[]
+  vendorTags      VendorTag[]
+  vendorServices  VendorService[]
+  Address         Address?
+  Testimonial     Testimonial[]
+  Otp             Otp?
+  LoginHistory    LoginHistory[]
+  Bid             Bid[]
+  ProjectUpdate   ProjectUpdate[]
+  BusinessAddress BusinessAddress?
+  Notification    Notification[]
+  UserPlan        UserPlan[]
+  UserCoupon      UserCoupon[]
+}
+
+model UserProfile {
+  id        String   @id @default(uuid()) @db.VarChar(36)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId    String   @unique @db.VarChar(36)
+  name      String
+  license   String?
+  image     String?
+  updatedAt DateTime @updatedAt @db.Timestamptz
+  createdAt DateTime @default(now()) @db.Timestamptz
+}
+
+model LoginHistory {
+  id        String   @id @default(uuid()) @db.VarChar(36)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId    String   @db.VarChar(36)
+  status    Boolean  @default(false)
+  message   String?
+  updatedAt DateTime @updatedAt @db.Timestamptz
+  createdAt DateTime @default(now()) @db.Timestamptz
+
+  @@index([userId])
+}
+
+model Notification {
+  id        String   @id @default(uuid()) @db.VarChar(36)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId    String   @db.VarChar(36)
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  projectId String?  @db.VarChar(36)
+  heading   String
+  message   String
+  data      Json?
+  isRead    Boolean  @default(false)
+  updatedAt DateTime @updatedAt @db.Timestamptz
+  createdAt DateTime @default(now()) @db.Timestamptz
+}
+
+model Service {
+  id            String          @id @default(uuid()) @db.VarChar(36)
+  Plan          Plan?           @relation(fields: [planId], references: [id], onUpdate: Cascade, onDelete: SetNull)
+  planId        String?         @db.VarChar(36)
+  iconUrl       String?
+  name          String          @unique
+  description   String
+  updatedAt     DateTime        @updatedAt @db.Timestamptz
+  createdAt     DateTime        @default(now()) @db.Timestamptz
+  Project       Project[]
+  VendorService VendorService[]
+  Tag           Tag[]
+}
+
+model Project {
+  id                String           @id @default(uuid()) @db.VarChar(36)
+  user              User             @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  userId            String           @db.VarChar(36)
+  Service           Service?         @relation(fields: [serviceId], references: [id], onUpdate: Cascade, onDelete: SetNull)
+  serviceId         String?
+  Address           Address?         @relation(fields: [addressId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  addressId         String?          @db.VarChar(36)
+  title             String
+  description       String
+  status            ProjectStatus    @default(IN_PROGRESS)
+  budgetPreference  Int              @default(5) // from 0 to 10 higher value means high quality lower value means affordable 5 means no preference
+  preferenceMessage String?
+  updatedAt         DateTime         @updatedAt @db.Timestamptz
+  createdAt         DateTime         @default(now()) @db.Timestamptz
+  SiteMeasurement   SiteMeasurement?
+  ProjectTag        ProjectTag[]
+  Review            Review[]
+  Bid               Bid[]
+  ProjectUpdate     ProjectUpdate[]
+  ProjectFile       ProjectFile[]
+  SampleFile        SampleFile[]
+  Notification      Notification[]
+
+  @@index([userId])
+}
+
+model SiteMeasurement {
+  id          String   @id @default(uuid()) @db.VarChar(36)
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  projectId   String   @unique @db.VarChar(36)
+  length      Decimal? @db.Decimal(10, 2)
+  width       Decimal? @db.Decimal(10, 2)
+  height      Decimal? @db.Decimal(10, 2)
+  area        Decimal? @db.Decimal(10, 2)
+  description String?
+  unit        Unit     @default(METER)
+  updatedAt   DateTime @updatedAt @db.Timestamptz
+  createdAt   DateTime @default(now()) @db.Timestamptz
+}
+
+model SampleFile {
+  id        String   @id @default(uuid()) @db.VarChar(36)
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  projectId String   @db.VarChar(36)
+  url       String
+  updatedAt DateTime @updatedAt @db.Timestamptz
+  createdAt DateTime @default(now()) @db.Timestamptz
+}
+
+model Address {
+  id         String    @id @default(uuid()) @db.VarChar(36)
+  user       User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String?   @unique @db.VarChar(36)
+  line1      String
+  line2      String?
+  country    String
+  state      String
+  city       String
+  postalCode String
+  updatedAt  DateTime  @updatedAt @db.Timestamptz
+  createdAt  DateTime  @default(now()) @db.Timestamptz
+  Project    Project[]
+}
+
+model BusinessAddress {
+  id         String   @id @default(uuid()) @db.VarChar(36)
+  user       User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String?  @unique @db.VarChar(36)
+  line1      String
+  line2      String?
+  country    String
+  state      String
+  city       String
+  postalCode String
+  updatedAt  DateTime @updatedAt @db.Timestamptz
+  createdAt  DateTime @default(now()) @db.Timestamptz
+}
+
+model Tag {
+  id        String       @id @default(uuid()) @db.VarChar(36)
+  service   Service      @relation(fields: [serviceId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  serviceId String       @db.VarChar(36)
+  name      String       @unique
+  updatedAt DateTime     @updatedAt @db.Timestamptz
+  createdAt DateTime     @default(now()) @db.Timestamptz
+  projects  ProjectTag[]
+  VendorTag VendorTag[]
+
+  @@index([serviceId])
+}
+
+model ProjectTag {
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  projectId String   @db.VarChar(36)
+  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  tagId     String   @db.VarChar(36)
+  updatedAt DateTime @updatedAt @db.Timestamptz
+  createdAt DateTime @default(now()) @db.Timestamptz
+
+  @@id([projectId, tagId])
+  @@index([projectId])
+  @@index([tagId])
+}
+
+model ProjectFile {
+  id        String   @id @default(uuid()) @db.VarChar(36)
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  projectId String   @db.VarChar(36)
+  url       String
+  type      FileType
+  updatedAt DateTime @updatedAt @db.Timestamptz
+  createdAt DateTime @default(now()) @db.Timestamptz
+}
+
+model Bid {
+  id                   String    @id @default(uuid()) @db.VarChar(36)
+  project              Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId            String    @db.VarChar(36)
+  vendor               User      @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  vendorId             String    @db.VarChar(36)
+  vendorStatus         BidStatus @default(PENDING)
+  userStatus           BidStatus @default(PENDING)
+  vendorMessage        String?
+  vendorAttachmentName String?
+  vendorAttachmentUrl  String?
+  updatedAt            DateTime  @updatedAt @db.Timestamptz
+  createdAt            DateTime  @default(now()) @db.Timestamptz
+}
+
+model ProjectUpdate {
+  id                String              @id @default(uuid()) @db.VarChar(36)
+  project           Project             @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  projectId         String              @db.VarChar(36)
+  Vendor            User?               @relation(fields: [vendorId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  vendorId          String?             @db.VarChar(36)
+  description       String
+  updatedAt         DateTime            @updatedAt @db.Timestamptz
+  createdAt         DateTime            @default(now()) @db.Timestamptz
+  ProjectUpdateFile ProjectUpdateFile[]
+}
+
+model ProjectUpdateFile {
+  ProjectUpdate   ProjectUpdate @relation(fields: [projectUpdateId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  projectUpdateId String        @db.VarChar(36)
+  type            FileType
+  fileUrl         String
+
+  @@id([projectUpdateId, type])
+}
+
+model Review {
+  id          String   @id @default(uuid()) @db.VarChar(36)
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId   String   @db.VarChar(36)
+  vendor      User     @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  vendorId    String   @db.VarChar(36)
+  rating      Int
+  comment     String?
+  isPublished Boolean  @default(true)
+  updatedAt   DateTime @updatedAt @db.Timestamptz
+  createdAt   DateTime @default(now()) @db.Timestamptz
+
+  @@index([projectId])
+  @@index([vendorId])
+}
+
+model VendorTag {
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String   @db.VarChar(36)
+  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  tagId     String   @db.VarChar(36)
+  updatedAt DateTime @updatedAt @db.Timestamptz
+  createdAt DateTime @default(now()) @db.Timestamptz
+
+  @@id([userId, tagId])
+  @@index([userId])
+  @@index([tagId])
+}
+
+model VendorService {
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String   @db.VarChar(36)
+  service   Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  serviceId String   @db.VarChar(36)
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
+
+  @@id([userId, serviceId])
+  @@index([userId])
+  @@index([serviceId])
+}
+
+model Testimonial {
+  id          String   @id @default(uuid()) @db.VarChar(36)
+  user        User     @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  userId      String   @db.VarChar(36)
+  rating      Int
+  title       String
+  description String
+  createdAt   DateTime @default(now()) @db.Timestamptz
+  updatedAt   DateTime @updatedAt @db.Timestamptz
+
+  @@index([userId])
+}
+
+model Otp {
+  id              String   @id @default(uuid()) @db.VarChar(36)
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId          String   @unique @db.VarChar(36)
+  type            OtpType
+  oneTimePassword String
+  isVerified      Boolean  @default(false)
+  updatedAt       DateTime @updatedAt
+  createdAt       DateTime @default(now())
+}
+
+model Plan {
+  id              String     @id @default(uuid()) @db.VarChar(36)
+  name            String     @unique
+  description     String?
+  amount          Float
+  isPopular       Boolean    @default(false)
+  productId       String? // Stripe Product ID
+  priceId         String? // Stripe Price ID
+  yearlyProductId String? // Stripe Product ID for yearly
+  yearlyPriceId   String? // Stripe Price ID for yearly
+  updatedAt       DateTime   @updatedAt
+  createdAt       DateTime   @default(now())
+  UserPlan        UserPlan[]
+  Service         Service[]
+}
+
+model UserPlan {
+  id        String   @id @default(uuid()) @db.VarChar(36)
+  User      User?    @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: SetNull)
+  userId    String?  @db.VarChar(36)
+  Plan      Plan?    @relation(fields: [planId], references: [id], onUpdate: Cascade, onDelete: SetNull)
+  planId    String?  @db.VarChar(36)
+  Coupon    Coupon?  @relation(fields: [couponId], references: [id], onUpdate: Cascade, onDelete: Restrict)
+  couponId  String?  @db.VarChar(36)
+  paymentId String
+  startDate DateTime
+  endDate   DateTime
+  type      Type     @default(MONTHLY)
+  mode      Mode     @default(PAID)
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  @@index([userId, planId, couponId])
+}
+
+model Coupon {
+  id          String       @id @default(uuid()) @db.VarChar(36)
+  code        String       @unique
+  description String?
+  monthsFree  Int
+  limit       Int?
+  isActive    Boolean      @default(true)
+  expiresAt   DateTime?
+  updatedAt   DateTime     @updatedAt
+  createdAt   DateTime     @default(now())
+  UserCoupon  UserCoupon[]
+  UserPlan    UserPlan[]
+}
+
+model UserCoupon {
+  id        String   @id @default(uuid()) @db.VarChar(36)
+  Coupon    Coupon   @relation(fields: [couponId], references: [id], onUpdate: Cascade, onDelete: Restrict)
+  couponId  String   @db.VarChar(36)
+  User      User?    @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: SetNull)
+  userId    String?  @db.VarChar(36)
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+}
+
+enum OtpType {
+  REGISTRATION
+  FORGOT_PASSWORD
+}
+
+enum FileType {
+  BEFORE
+  AFTER
+}
+
+enum ProjectStatus {
+  IN_PROGRESS
+  VENDOR_FOUND
+  AWARDED
+  COMPLETED
+}
+
+enum BidStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  VENDOR
+}
+
+enum Unit {
+  METER
+  FEET
+  YARD
+}
+
+enum Type {
+  MONTHLY
+  YEARLY
+}
+
+enum Mode {
+  PAID
+  ADMIN
+  TRIAL
+  COUPON
+}
