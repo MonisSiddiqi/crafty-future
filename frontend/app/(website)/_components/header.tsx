@@ -104,7 +104,7 @@ export const Header = () => {
         {/* <div className="hidden lg:flex">
           <UserProfile />
         </div> */}
-        <div className="w-44"></div>
+        <div className="lg:w-44"></div>
       </div>
     </header>
   );
